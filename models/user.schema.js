@@ -45,7 +45,7 @@ const userSchema = mongoose.Schema(
 
 // challenge 1 -encrypt password/ to send the password in database(mongoose hooks)
 userSchema.pre("save", async function(next){
-    if(!this.modified("password")) return next();
+    if(!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10)
     next()
 
@@ -70,7 +70,27 @@ userSchema.methods ={
                expiresIn: config.JWT_EXPIRY 
             }
         )
+    },
+
+    //forget password tokenor generate token to db and copy to user
+    generateForgetPasswordToken: function(){
+
+        const forgetToken = crypto.randomBytes(20).toString('hex');
+
+        //step1-save to db
+        this.forgotPasswordToken = crypto.createHash("sha256").update.apply(forgotTaken).digest("hex")
+        this.forgotPasswordExpiry = Date.now() + 20 + 60 * 1000
+
+        //step2-return values to user
+        return forgetToken
+
+
+
+
     }
+
+
+
 }
 
 
