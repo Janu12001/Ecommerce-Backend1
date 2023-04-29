@@ -1,7 +1,8 @@
 import User from '../model/user.schema.js'
 import asyncHandler from '../services/asyncHandler'
 import CustomError from '../utils/CustomError'
-
+import mailHelper from '../utils/mailHelper'
+import crypto from'crypto'
 
 
 
@@ -73,7 +74,7 @@ export const login = asyncHandler(async(req,res)=>{
       
    }
 
-   const user = User.findOne({email}).select("+password")
+   const user = await User.findOne({email}).select("+password")
 
    if(!user){
       throw new CustomError('Invalid credentials', 400)
@@ -114,4 +115,102 @@ export const logout = asyncHandler(async(_req,res)=>{
       message:loggedOut,
    })
 })
+
+/*
+@FORGETPASSWORD
+@route http://localhost:4000/api/auth/password/forgot
+@description User will submit email and we will generate a token
+@parameters email 
+@return sucess message - email send
+
+*/
+
+export const forgetPasword = asyncHandler(async(req,res)=>{
+  const{email} = req.body
+  //check email for null or ""
+  const user = awaitUser.findOne({email})
+  if(!user){
+   throw new CustomError('user not found', 404)
+  }
+
+  const resetToken =user.generateForgotPasswordToken()
+  user.save({validateBeforeSave: false})
+  
+  const resetUrl = 
+  `${req.protocol}://${req.get("host")}/api/auth/password/reset${resetToken}`
+  
+  const text =`your password reset url is \n\n${resetUrl}\n\n`
+  try{
+
+   await mailHelper({
+      email: user.email,
+      subject:"password reset email for website",
+      text:text,
+
+   })
+   res.status(200).json({
+      success: true,
+      message: `Email sent to ${user.email}`
+   })
+
+  }catch(error){
+
+  //rollback - clear fields and  save
+  user.forgotPasswordToken = undefined
+  user.forgotPasswordExpiry = undefined
+
+  await user.save({validateBeforeSave:false})
+   throw new CustomError(error.message || 'Email sent failure', 500)
+  }
+})
+
+/*
+@FORGETPASSWORD
+@route http://localhost:5000/api/auth/password/reset/
+@description User will be able to reset password based url
+@parameters token from url, password and confirm password
+@return userobject
+*/
+
+export const resetPassword = asyncHandler(async(req,res)=>{
+
+   const {token: resetToken} = req.params
+   const {password, confirmPassword} = req.body
+
+   const resetPasswordtoken = crypto.createHash('sha256').update(resetToken).digest('hex')
+
+
+  const user = await User.findOne({
+      forgotPasswordToken: resetPasswordtoken,
+      forgotPasswordExpiry:{$gt: Date.now()}
+   })
+
+   if(!user){
+      throw new CustomError('password token is invalid or expired', 400)
+   }
+
+   if(password !== confirmPassword){
+      throw new CustomError('password and confirm password does not match', 400)
+   }
+
+   user.password = password
+   user.forgotPasswordToken = undefined
+   user.forgotPasswordExpiry= undefined
+   
+   await user.save()
+
+   //create token and sent a response
+   const token = user.getJwtToken()
+   user.password = undefined
+   //helper method for  cookie can be added
+   res.cookie("token", token, cookieOptions)
+   res.status(200).json({
+      success:true,
+      user
+   })
+})
+
+//TODO: create a controller for changed password
+
+
 
