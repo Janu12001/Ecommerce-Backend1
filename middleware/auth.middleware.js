@@ -5,7 +5,7 @@ import CustomError from '../utils/CustomError'
 import config from"../config/index.js"
  
 
-export const isloggedin = asyncHandler(async(req,res,next)=>{
+export const isloggedin = asyncHandler(async(req,_res,next)=>{
     let token;
 
     if(req.cookies.token|| (req,headers.authorization && req.headers.authorization.startWith("Bearer"))

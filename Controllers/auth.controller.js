@@ -5,9 +5,6 @@ import mailHelper from '../utils/mailHelper'
 import crypto from'crypto'
 
 
-
-
-
 export const cookieOptions ={
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 *1000),
     httpOnly: true,
@@ -213,4 +210,23 @@ export const resetPassword = asyncHandler(async(req,res)=>{
 //TODO: create a controller for changed password
 
 
+/*
+@GET_Profile
+@REQUEST_TYPE GET
+@route http://localhost:5000/api/auth/profile
+@description check for token and populate req.user
+@parameters 
+@return userobject
+*/
 
+export const getProfile = asyncHandler(async(req,res)=>{
+   const{user} = req
+   if(!user){
+      throw new CustomError('usernot found', 404)
+   }
+
+   res.status(200).json({
+      success:true,
+      user
+   })
+})
