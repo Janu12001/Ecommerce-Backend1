@@ -66,7 +66,7 @@ export const updateCollection = asyncHandler(async(req,res)=>{
 
 //delete collection
 
-export const deleteCollection = asyncHandler(async,( req, res)=>{
+export const deleteCollection = asyncHandler(async ( req, res)=>{
    
     const{id: collectionId} = req.params
 
