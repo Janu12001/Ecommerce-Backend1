@@ -73,3 +73,32 @@ export const addProduct = asyncHandler(async(req,res)=>{
     })
 })
 
+
+
+export const getAllProducts = ayncHandler(async(req,res)=>{
+
+    const products = await Products.find({})
+    if(!products){
+        throw new CustomError("No product was found" , 404)
+    }
+
+    res.status(200).json({
+        success: true,
+        products
+    })
+})
+
+
+
+export const ProductbyId = ayncHandler(async(req,res)=>{
+    const {} = req.params
+    const product = await Products.findById(productId))
+    if(!product){
+        throw new CustomError("No product was found" , 404)
+    }
+
+    res.status(200).json({
+        success: true,
+        product
+    })
+})
